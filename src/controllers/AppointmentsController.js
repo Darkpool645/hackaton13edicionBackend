@@ -2,7 +2,7 @@ const express = require('express');
 const QRcode = require('qrcode');
 const router = express.Router();
 const connection = require('../utils/MySQLConnection');
-const { body, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 
 /**
  * @swagger
@@ -102,6 +102,91 @@ router.post(
           appointment_id: appointmentId,
           qrCode: url,
         });
+      });
+    });
+  }
+);
+
+/**
+ * @swagger
+ * /api/appointments/by-user:
+ *   get:
+ *     summary: Get appointments by user ID
+ *     description: Retrieves all appointments for a specific user by their user ID.
+ *     tags:
+ *       - Appointments
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: Appointments retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Appointments found
+ *                 appointments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       appointment_id:
+ *                         type: integer
+ *                         example: 1
+ *                       estimated_date:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-05-17T10:00:00.000Z"
+ *                       fk_user:
+ *                         type: integer
+ *                         example: 1
+ *                       fk_hospital:
+ *                         type: integer
+ *                         example: 1
+ *                       description:
+ *                         type: string
+ *                         example: "Consulta médica general"
+ *       404:
+ *         description: No appointments found
+ *       500:
+ *         description: Error retrieving appointments
+ */
+router.get('/by-user',
+  query('user_id').isInt().withMessage('user_id must be an integer'),
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user_id } = req.query;
+
+    const queryStr = "SELECT * FROM appointments WHERE fk_user = ?";
+    connection.query(queryStr, [user_id], (error, response) => {
+      if (error) {
+        console.error("Error retrieving appointments:", error);
+        return res.status(500).json({
+          message: 'Error retrieving appointments'
+        });
+      }
+
+      if (response.length === 0) {
+        return res.status(404).json({
+          message: 'No appointments found'
+        });
+      }
+
+      return res.status(200).json({
+        message: 'Appointments found',
+        appointments: response
       });
     });
   }
