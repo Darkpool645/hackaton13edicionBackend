@@ -73,7 +73,7 @@ router.post(
 
     const { fk_user, fk_hospital, estimated_date, description } = req.body;
 
-    const query = 'INSERT INTO appointments (estimated_date, fk_user, fk_hospital, description) VALUES (?, ?, ?, ?)';
+    const query = 'INSERT INTO appointments (estimated_date, fk_user, fk_hospital, description, fk_status) VALUES (?, ?, ?, ?, 1)';
     const values = [estimated_date, fk_user, fk_hospital, description];
 
     connection.query(query, values, (error, results) => {

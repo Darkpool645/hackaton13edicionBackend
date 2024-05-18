@@ -3,12 +3,6 @@ create database if not exists hackaton13edicion;
 
 use hackaton13edicion;
 
-CREATE TABLE roles(
-	rol_id BIGINT AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    PRIMARY KEY (rol_id)
-);
-
 CREATE TABLE users(
 	user_id BIGINT AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -18,9 +12,7 @@ CREATE TABLE users(
     rfc VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     salt VARCHAR(255) NOT NULL,
-    fk_rol BIGINT NOT NULL,
-    PRIMARY KEY (user_id),
-    FOREIGN KEY (fk_rol) REFERENCES roles (rol_id)
+    PRIMARY KEY (user_id)
 );
 
 CREATE TABLE hospitals(
@@ -30,15 +22,29 @@ CREATE TABLE hospitals(
     PRIMARY KEY (hospital_id)
 );
 
+CREATE TABLE statuses(
+	status_id BIGINT AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (status_id)
+);
+
+INSERT INTO statuses (name) VALUES ('Pendiente'),('Finalizado');
+INSERT INTO hospitals (name, address) VALUES ('Hospital Patito', 'Calle 123');
+
 CREATE TABLE appointments(
 	appointment_id BIGINT AUTO_INCREMENT,
     estimated_date DATETIME,
     fk_user BIGINT NOT NULL,
     fk_hospital BIGINT NOT NULL,
+    fk_status BIGINT NOT NULL,
+    description TEXT NOT NULL,
     PRIMARY KEY (appointment_id),
     FOREIGN KEY (fk_user) REFERENCES users(user_id),
-    FOREIGN KEY (fk_hospital) REFERENCES hospitals(hospital_id)
+    FOREIGN KEY (fk_hospital) REFERENCES hospitals(hospital_id),
+    FOREIGN KEY (fk_status) references statuses (status_id)
 );
 
-INSERT INTO roles (name) VALUES ('Usuario'),('Administrador');
-INSERT INTO hospitals(name, address) VALUES ('Hospital Patito', 'Calle 123');   
+select * from appointments;
+
+select * from appointments INNER JOIN statuses;
+select * from hospitals;

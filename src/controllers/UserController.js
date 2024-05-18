@@ -46,7 +46,7 @@ router.get('/profile',
     const { id } = req.params;
 
     const query = "SELECT * FROM users WHERE user_id = ?";
-    connection.query(query, [id], (error, response) => {
+    connection.query(query, id, (error, response) => {
       if (error) {
         console.error("Bad request during get Profile:", error);
         return res.status(500).json({
