@@ -44,7 +44,8 @@ CREATE TABLE appointments(
     FOREIGN KEY (fk_status) references statuses (status_id)
 );
 
-select * from appointments;
 
-select * from appointments INNER JOIN statuses;
-select * from hospitals;
+INSERT INTO appointments(estimated_date, fk_user, fk_hospital, fk_status, description) VALUES
+('2024-06-17 16:00:00',1,1,1,'Revisión de presión sanguinea'),
+('2024-06-17 16:00:00',1,1,1,'Consulta por problema en el oído')
+;
