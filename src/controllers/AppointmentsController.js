@@ -1,7 +1,8 @@
 const express = require('express');
 const QRcode = require('qrcode');
 const router = express.Router();
-const connection = require('../utils/MySQLConnection')
+const connection = require('../utils/MySQLConnection');
+const { body, validationResult } = require('express-validator');
 
 /**
  * @swagger
@@ -50,7 +51,18 @@ const connection = require('../utils/MySQLConnection')
  *                   example: "Error creating appointment or generating QR code"
  */
 
-router.post('/generate', (req, res) => {
+router.post(
+  '/generate',
+  [
+    body('fk_user').isInt().withMessage('fk_user must be an integer'),
+    body('fk_hospital').isInt().withMessage('fk_hospital must be an integer'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { fk_user, fk_hospital } = req.body;
     const currentDate = new Date();
 
@@ -58,31 +70,33 @@ router.post('/generate', (req, res) => {
     const values = [currentDate, fk_user, fk_hospital];
 
     connection.query(query, values, (error, results) => {
-        if (error) {
-            console.log("No jala esta madre:",error);
-            return res.status(500).json({ message: 'Error creating appointment' });
+      if (error) {
+        console.error('Error creating appointment:', error);
+        return res.status(500).json({ message: 'Error creating appointment' });
+      }
+
+      const appointmentId = results.insertId;
+
+      const appointmentDetails = {
+        appointment_id: appointmentId,
+        currentDate,
+        fk_user,
+        fk_hospital,
+      };
+
+      QRcode.toDataURL(JSON.stringify(appointmentDetails), (err, url) => {
+        if (err) {
+          console.error('Error generating QR code:', err);
+          return res.status(500).json({ message: 'Error generating QR code' });
         }
 
-        const appointmentId = results.insertId;
-
-        const appointmentDetails = {
-            appointment_id: appointmentId,
-            currentDate,
-            fk_user,
-            fk_hospital
-        };
-
-        QRcode.toDataURL(JSON.stringify(appointmentDetails), (err, url) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error generating QR code' });
-            }
-
-            res.status(201).json({
-                appointment_id: appointmentId,
-                qrCode: url
-            });
+        res.status(201).json({
+          appointment_id: appointmentId,
+          qrCode: url,
         });
+      });
     });
-});
+  }
+);
 
 module.exports = router;
