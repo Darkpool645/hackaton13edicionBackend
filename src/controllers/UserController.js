@@ -152,7 +152,7 @@ router.put('/editProfile',
       console.error("Internal Server Error during edit profile:", error);
       return res.status(500).json({
         message: 'Internal server error during profile update'
-      });v
+      });
     }
   }
 );

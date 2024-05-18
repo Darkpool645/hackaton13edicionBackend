@@ -25,6 +25,13 @@ const { body, validationResult } = require('express-validator');
  *               fk_hospital:
  *                 type: integer
  *                 example: 1
+ *               estimated_date:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2024-05-17T10:00:00.000Z"
+ *               description:
+ *                 type: string
+ *                 example: "Consulta médica general"
  *     responses:
  *       201:
  *         description: Appointment created and QR code generated successfully
@@ -56,6 +63,7 @@ router.post(
   [
     body('fk_user').isInt().withMessage('fk_user must be an integer'),
     body('fk_hospital').isInt().withMessage('fk_hospital must be an integer'),
+    body('estimated_date').isISO8601().toDate().withMessage('estimated_date must be a valid date-time'),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -63,11 +71,10 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { fk_user, fk_hospital } = req.body;
-    const currentDate = new Date();
+    const { fk_user, fk_hospital, estimated_date, description } = req.body;
 
-    const query = 'INSERT INTO appointments (estimated_date, fk_user, fk_hospital) VALUES (?, ?, ?)';
-    const values = [currentDate, fk_user, fk_hospital];
+    const query = 'INSERT INTO appointments (estimated_date, fk_user, fk_hospital, description) VALUES (?, ?, ?, ?)';
+    const values = [estimated_date, fk_user, fk_hospital, description];
 
     connection.query(query, values, (error, results) => {
       if (error) {
@@ -79,9 +86,10 @@ router.post(
 
       const appointmentDetails = {
         appointment_id: appointmentId,
-        currentDate,
+        estimated_date,
         fk_user,
         fk_hospital,
+        description,
       };
 
       QRcode.toDataURL(JSON.stringify(appointmentDetails), (err, url) => {
